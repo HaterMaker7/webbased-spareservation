@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Serenity Spa — Reservation System</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Libre+Baskerville:wght@400;700&display=swap');
+  :root{--gold:#B76E79;--gold-light:#E6C5C9;--gold-dark:#7A3E45;--dark:#F4F4F6;--dark2:#FFFFFF;--dark3:#E9E9EC;--text:#2C2C2E;--text-muted:#8A8A90;--success:#6FA58A;--danger:#C15A5A;--info:#6A8FBF;--warn:#C2A86D;}
+  *{margin:0;padding:0;box-sizing:border-box;}
+  body{font-family:'Inter',sans-serif;background:var(--dark);color:var(--text);min-height:100vh;font-weight:500}
+  h1,h2,h3,h4{font-family:'Libre Baskerville',serif;}
+  ::-webkit-scrollbar{width:6px;} ::-webkit-scrollbar-track{background:var(--dark2);} ::-webkit-scrollbar-thumb{background:var(--gold-dark);border-radius:3px;}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+
+  /* LOGIN */
+  #login-screen{position:fixed;inset:0;background:var(--dark);display:flex;align-items:center;justify-content:center;z-index:1000;}
+  .login-box{background:var(--dark2);border:1px solid rgba(201,169,110,.3);border-radius:2px;padding:3rem 3.5rem;width:420px;max-width:95vw;animation:fadeUp .6s ease;}
+  .login-logo{text-align:center;margin-bottom:2.5rem;}
+  .login-logo h1{font-size:2.4rem;color:var(--gold);letter-spacing:.08em;font-weight:300;}
+  .login-logo p{font-size:.75rem;letter-spacing:.3em;text-transform:uppercase;color:var(--text-muted);margin-top:.3rem;}
+
+  /* FORMS */
+  .form-group{margin-bottom:1.2rem;}
+  .form-group label{display:block;font-size:.72rem;letter-spacing:.2em;text-transform:uppercase;color:var(--text-muted);margin-bottom:.5rem;}
+  .form-group input,.form-group select,.form-group textarea{width:100%;background:var(--dark3);border:1px solid rgba(201,169,110,.2);color:var(--text);padding:.8rem 1rem;font-family:'Jost',sans-serif;font-size:.9rem;border-radius:1px;outline:none;transition:border-color .3s;}
+  .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--gold);}
+  .form-group select option{background:var(--dark3);}
+  .form-group textarea{resize:vertical;}
+
+  /* BUTTONS */
+  .btn{padding:.85rem 2rem;font-family:'Jost',sans-serif;font-size:.8rem;letter-spacing:.25em;text-transform:uppercase;cursor:pointer;border:none;border-radius:1px;transition:all .3s;}
+  .btn-primary{background:var(--gold);color:var(--dark);}
+  .btn-primary:hover{background:var(--gold-light);}
+  .btn-outline{background:transparent;border:1px solid var(--gold);color:var(--gold);}
+  .btn-outline:hover{background:var(--gold);color:var(--dark);}
+  .btn-danger{background:var(--danger);color:var(--text);border:none;}
+  .btn-danger:hover{background:#a05555;}
+  .btn-success{background:var(--success);color:var(--text);border:none;}
+  .btn-success:hover{background:#6a9a7a;}
+  .btn-warn{background:var(--warn);color:var(--text);border:none;}
+  .btn-sm{padding:.45rem 1rem;font-size:.72rem;}
+  .btn-full{width:100%;}
+  .error-msg{color:#c08080;font-size:.8rem;margin-top:.5rem;}
+
+  /* LAYOUT */
+  #app{display:none;}
+  #app.visible{display:flex;min-height:100vh;}
+  .sidebar{width:260px;min-height:100vh;background:var(--dark2);border-right:1px solid rgba(201,169,110,.15);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;overflow-y:auto;}
+  .sidebar-logo{padding:2rem 1.5rem 1.5rem;border-bottom:1px solid rgba(201,169,110,.1);}
+  .sidebar-logo h2{font-size:1.6rem;color:var(--gold);font-weight:300;letter-spacing:.05em;}
+  .sidebar-logo p{font-size:.65rem;letter-spacing:.25em;text-transform:uppercase;color:var(--text-muted);margin-top:.2rem;}
+  .sidebar-user{padding:1rem 1.5rem;border-bottom:1px solid rgba(201,169,110,.1);}
+  .role-badge{display:inline-block;font-size:.65rem;letter-spacing:.15em;text-transform:uppercase;padding:.25rem .7rem;border-radius:20px;margin-bottom:.3rem;}
+  .role-admin{background:rgba(201,169,110,.15);color:var(--gold);}
+  .role-user{background:rgba(90,138,106,.2);color:#80c090;}
+  nav{flex:1;padding:1rem 0;}
+  .nav-section{padding:.5rem 1.5rem .3rem;font-size:.65rem;letter-spacing:.2em;text-transform:uppercase;color:var(--text-muted);}
+  .nav-item{display:flex;align-items:center;gap:.75rem;padding:.75rem 1.5rem;cursor:pointer;transition:all .2s;font-size:.85rem;color:var(--text-muted);border-left:2px solid transparent;}
+  .nav-item:hover{color:var(--text);background:rgba(201,169,110,.05);}
+  .nav-item.active{color:var(--gold);border-left-color:var(--gold);background:rgba(201,169,110,.08);}
+  .nav-icon{width:18px;text-align:center;font-size:14px;}
+  .sidebar-footer{padding:1rem 1.5rem;border-top:1px solid rgba(201,169,110,.1);}
+  .main-content{margin-left:260px;flex:1;padding:2rem;min-height:100vh;}
+  .page{display:none;}
+  .page.active{display:block;animation:fadeIn .3s ease;}
+  .page-header{margin-bottom:2rem;padding-bottom:1rem;border-bottom:1px solid rgba(201,169,110,.15);}
+  .page-header h2{font-size:2rem;color:var(--gold);font-weight:300;}
+  .page-header p{color:var(--text-muted);font-size:.85rem;margin-top:.3rem;}
+
+  /* CARDS */
+  .card{background:var(--dark2);border:1px solid rgba(201,169,110,.15);border-radius:2px;padding:1.5rem;}
+  .stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:2rem;}
+  .stat-card{background:var(--dark3);border:1px solid rgba(201,169,110,.1);border-radius:2px;padding:1.25rem;}
+  .stat-card .label{font-size:.7rem;letter-spacing:.2em;text-transform:uppercase;color:var(--text-muted);margin-bottom:.5rem;}
+  .stat-card .value{font-family:'Cormorant Garamond',serif;font-size:2.2rem;color:var(--gold);}
+
+  /* TABLE */
+  .table-wrap{overflow-x:auto;}
+  table{width:100%;border-collapse:collapse;font-size:.85rem;}
+  th{text-align:left;padding:.75rem 1rem;font-size:.7rem;letter-spacing:.15em;text-transform:uppercase;color:var(--text-muted);border-bottom:1px solid rgba(201,169,110,.15);font-weight:400;}
+  td{padding:.85rem 1rem;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle;}
+  tr:hover td{background:rgba(201,169,110,.03);}
+
+  /* BADGES */
+  .badge{display:inline-block;padding:.25rem .7rem;border-radius:20px;font-size:.7rem;letter-spacing:.1em;}
+  .badge-awaiting_payment{background:rgba(128,80,180,.2);color:#c0a0f0;}
+  .badge-pending{background:rgba(138,122,58,.2);color:#c9b570;}
+  .badge-confirmed{background:rgba(90,138,106,.2);color:#80c090;}
+  .badge-inprogress{background:rgba(74,106,138,.2);color:#80a8d0;}
+  .badge-done{background:rgba(201,169,110,.15);color:var(--gold);}
+  .badge-cancelled{background:rgba(138,74,74,.2);color:#c08080;}
+  .badge-uploaded{background:rgba(74,106,138,.2);color:#80a8d0;}
+  .badge-verified{background:rgba(90,138,106,.2);color:#80c090;}
+  .badge-rejected{background:rgba(138,74,74,.2);color:#c08080;}
+
+  /* GRIDS */
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;}
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;}
+  @media(max-width:900px){.grid-2,.grid-3{grid-template-columns:1fr;}.sidebar{width:220px;}.main-content{margin-left:220px;}}
+
+  /* SLOTS */
+  .time-slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:.5rem;margin-top:1rem;}
+  .slot{padding:.6rem;text-align:center;border:1px solid rgba(201,169,110,.2);border-radius:1px;cursor:pointer;font-size:.8rem;transition:all .2s;color:var(--text-muted);}
+  .slot:hover:not(.taken){border-color:var(--gold);color:var(--gold);}
+  .slot.selected{background:var(--gold);color:var(--dark);border-color:var(--gold);}
+  .slot.taken{background:rgba(138,74,74,.1);color:rgba(192,128,128,.4);cursor:not-allowed;border-color:rgba(138,74,74,.15);text-decoration:line-through;}
+  .therapist-conflict{font-size:.72rem;color:#c08080;margin-top:.3rem;display:none;}
+
+  /* CATALOG */
+  .service-card{background:var(--dark3);border:1px solid rgba(201,169,110,.1);border-radius:2px;padding:1.5rem;transition:all .3s;}
+  .service-card:hover{border-color:rgba(201,169,110,.4);transform:translateY(-2px);}
+  .service-card h4{font-size:1.1rem;color:var(--gold);margin-bottom:.4rem;}
+  .service-card .duration{font-size:.75rem;color:var(--text-muted);letter-spacing:.1em;}
+  .service-card .price{font-family:'Cormorant Garamond',serif;font-size:1.5rem;color:var(--text);margin-top:.8rem;}
+  .service-card .desc{font-size:.8rem;color:var(--text-muted);margin-top:.5rem;line-height:1.6;}
+
+  /* STATUS TRACKER */
+  .tracker-steps{display:flex;align-items:flex-start;margin:1.5rem 0;overflow-x:auto;}
+  .tracker-step{flex:1;text-align:center;position:relative;min-width:75px;}
+  .tracker-step::before{content:'';position:absolute;top:13px;left:50%;right:-50%;height:2px;background:rgba(201,169,110,.15);z-index:0;}
+  .tracker-step:last-child::before{display:none;}
+  .step-dot{width:26px;height:26px;border-radius:50%;border:2px solid rgba(201,169,110,.25);background:var(--dark2);display:flex;align-items:center;justify-content:center;margin:0 auto .5rem;font-size:10px;color:var(--text-muted);position:relative;z-index:1;transition:all .3s;}
+  .tracker-step.done .step-dot{background:var(--success);border-color:var(--success);color:#fff;}
+  .tracker-step.active .step-dot{background:var(--gold);border-color:var(--gold);color:var(--dark);}
+  .tracker-step.done::before{background:var(--success);}
+  .step-label{font-size:.62rem;color:var(--text-muted);letter-spacing:.05em;}
+  .tracker-step.active .step-label{color:var(--gold);}
+  .tracker-step.done .step-label{color:#80c090;}
+
+  /* PAYMENT */
+  .payment-box{background:var(--dark3);border:2px solid rgba(201,169,110,.3);border-radius:2px;padding:2rem;text-align:center;}
+  .payment-amount{font-family:'Cormorant Garamond',serif;font-size:2.8rem;color:var(--gold);margin:1rem 0;}
+  .countdown{font-size:1.4rem;font-family:'Cormorant Garamond',serif;color:#c08080;letter-spacing:.05em;}
+  .countdown.urgent{color:#e04040;animation:pulse 1s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+  .upload-zone{border:2px dashed rgba(201,169,110,.3);border-radius:2px;padding:2rem;text-align:center;cursor:pointer;transition:all .3s;margin:1rem 0;}
+  .upload-zone:hover{border-color:var(--gold);background:rgba(201,169,110,.05);}
+  .upload-zone.has-file{border-color:var(--success);background:rgba(90,138,106,.05);}
+  .upload-preview{max-width:200px;max-height:200px;margin:1rem auto;display:block;border-radius:2px;}
+
+  /* MODAL */
+  .modal-overlay{position:fixed;inset:0;background:rgba(10,8,6,.85);z-index:500;display:flex;align-items:center;justify-content:center;padding:1rem;}
+  .modal{background:var(--dark2);border:1px solid rgba(201,169,110,.3);border-radius:2px;padding:2rem;width:540px;max-width:95vw;max-height:90vh;overflow-y:auto;animation:fadeUp .3s ease;}
+  .modal h3{font-size:1.6rem;color:var(--gold);margin-bottom:1.5rem;font-weight:300;}
+  .modal-actions{display:flex;gap:.75rem;justify-content:flex-end;margin-top:1.5rem;padding-top:1rem;border-top:1px solid rgba(201,169,110,.1);}
+
+  /* TABS */
+  .tabs{display:flex;border-bottom:1px solid rgba(201,169,110,.15);margin-bottom:1.5rem;flex-wrap:wrap;}
+  .tab-btn{padding:.7rem 1.5rem;font-family:'Jost',sans-serif;font-size:.78rem;letter-spacing:.15em;text-transform:uppercase;cursor:pointer;background:none;border:none;color:var(--text-muted);border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s;}
+  .tab-btn.active{color:var(--gold);border-bottom-color:var(--gold);}
+
+  /* BAR CHART */
+  .bar-chart{margin-top:1rem;}
+  .bar-row{display:flex;align-items:center;gap:1rem;margin-bottom:.8rem;}
+  .bar-label{width:110px;font-size:.78rem;color:var(--text-muted);text-align:right;flex-shrink:0;}
+  .bar-track{flex:1;height:8px;background:rgba(255,255,255,.05);border-radius:4px;overflow:hidden;}
+  .bar-fill{height:100%;border-radius:4px;background:var(--gold-dark);transition:width 1s ease;}
+  .bar-val{width:55px;font-size:.78rem;color:var(--text);flex-shrink:0;}
+
+  /* ALERTS */
+  .alert{padding:.85rem 1rem;border-radius:1px;font-size:.85rem;margin-bottom:1rem;line-height:1.5;}
+  .alert-success{background: rgba(138, 58, 58, 0.15);border-left:3px solid var(--success);color:#c97070;}
+  .alert-info{background: rgba(138, 58, 58, 0.15);border-left:3px solid var(--info);color:#c97070;}
+  .alert-warn {background: rgba(138, 58, 58, 0.15);border-left: 3px solid #C26D6D;color: #c97070;}
+  .alert-danger{background: rgba(138, 58, 58, 0.15);border-left:3px solid var(--danger);color:#c97070;}
+
+  /* FILTER */
+  .filter-bar{display:flex;gap:.75rem;margin-bottom:1.25rem;flex-wrap:wrap;}
+  .filter-bar input,.filter-bar select{background:var(--dark3);border:1px solid rgba(201,169,110,.15);color:var(--text);padding:.6rem .9rem;font-family:'Jost',sans-serif;font-size:.85rem;border-radius:1px;outline:none;transition:border-color .2s;}
+  .filter-bar input:focus,.filter-bar select:focus{border-color:var(--gold);}
+  .filter-bar input{flex:1;min-width:180px;}
+
+  /* PROOF IMAGE */
+  .proof-thumb{width:60px;height:60px;object-fit:cover;border-radius:2px;border:1px solid rgba(201,169,110,.2);cursor:pointer;}
+</style>
+</head>
+<body>
+<!-- LOGIN -->
+<div id="login-screen">
+<div class="login-box">
+<div class="login-logo">
+<h1>Serenity</h1>
+<p>Spa &amp; Treatment</p>
+</div>
+<div class="form-group"><label>Username</label><input type="text" id="login-user" placeholder="Enter username" onkeydown="if(event.key==='Enter')doLogin()" /></div>
+<div class="form-group"><label>Password</label><input type="password" id="login-pass" placeholder="Enter password" onkeydown="if(event.key==='Enter')doLogin()" /></div>
+<p class="error-msg" id="login-error"></p>
+<br /><button class="btn btn-primary btn-full" onclick="doLogin()">Sign In</button>
+</div>
+</div>
+<!-- APP -->
+<div id="app">
+<aside class="sidebar">
+<div class="sidebar-logo">
+<h2>Serenity</h2>
+<p>Spa &amp; Treatment</p>
+</div>
+<div class="sidebar-user">
+<div><span class="role-badge role-user" id="role-badge">Customer</span></div>
+<p id="sidebar-username" style="font-size: .9rem; margin-top: .25rem;">—</p>
+</div>
+<nav>
+<div class="nav-section">Overview</div>
+<div class="nav-item active" onclick="showPage('dashboard')"><span class="nav-icon">◈</span>Dashboard</div>
+<div class="nav-section">Booking</div>
+<div class="nav-item" onclick="showPage('catalog')"><span class="nav-icon">✦</span>Service Catalog</div>
+<div class="nav-item" onclick="showPage('booking')"><span class="nav-icon">◷</span>Book Appointment</div>
+<div class="nav-item" onclick="showPage('status')"><span class="nav-icon">◉</span>My Appointments</div>
+<div class="nav-item" onclick="showPage('payment')"><span class="nav-icon">◈</span>Payment</div>
+<div id="admin-nav" style="display: none;">
+<div class="nav-section">Management</div>
+<div class="nav-item" onclick="showPage('master')"><span class="nav-icon">◧</span>Master Data</div>
+<div class="nav-item" onclick="showPage('reports')"><span class="nav-icon">◫</span>Reports &amp; Export</div>
+</div>
+</nav>
+<div class="sidebar-footer"><button class="btn btn-outline btn-sm btn-full" onclick="logout()">Sign Out</button></div>
+</aside>
+<main class="main-content"><!-- DASHBOARD -->
+<div id="page-dashboard" class="page active">
+<div class="page-header">
+<h2>Dashboard</h2>
+<p id="dash-sub">Welcome — here's your overview</p>
+</div>
+<div class="stat-grid" id="stat-grid"></div>
+<div class="grid-2">
+<div class="card">
+<h3 style="font-size: 1.2rem; color: var(--gold); margin-bottom: 1rem; font-weight: 300;" id="sched-title">Today's Schedule</h3>
+<div id="today-schedule"></div>
+</div>
+<div class="card">
+<h3 style="font-size: 1.2rem; color: var(--gold); margin-bottom: 1rem; font-weight: 300;">Quick Actions</h3>
+<div style="display: flex; flex-direction: column; gap: .75rem;"><button class="btn btn-outline" onclick="showPage('booking')">New Reservation</button> <button class="btn btn-outline" onclick="showPage('catalog')">Browse Services</button> <button class="btn btn-outline" onclick="showPage('status')">My Appointments</button> <button class="btn btn-outline" onclick="showPage('payment')">Upload Payment</button></div>
+</div>
+</div>
+</div>
+<!-- CATALOG -->
+<div id="page-catalog" class="page">
+<div class="page-header">
+<h2>Service Catalog</h2>
+<p>Discover our curated treatments</p>
+</div>
+<div class="tabs"><button class="tab-btn active" onclick="filterCatalog('all',this)">All</button> <button class="tab-btn" onclick="filterCatalog('massage',this)">Massage</button> <button class="tab-btn" onclick="filterCatalog('facial',this)">Facial</button> <button class="tab-btn" onclick="filterCatalog('body',this)">Body</button> <button class="tab-btn" onclick="filterCatalog('package',this)">Packages</button></div>
+<div class="grid-3" id="catalog-grid"></div>
+</div>
+<!-- BOOKING -->
+<div id="page-booking" class="page">
+<div class="page-header">
+<h2>Book Appointment</h2>
+<p>Reserve your moment of serenity</p>
+</div>
+<div class="grid-2">
+<div>
+<div class="card" style="margin-bottom: 1.5rem;">
+<h3 style="font-size: 1rem; color: var(--gold); margin-bottom: 1rem; font-weight: 400;">1. Select Service</h3>
+<div class="form-group" style="margin-bottom: .5rem;"><label>Service</label><select id="book-service" onchange="updateServiceInfo()">
+<option value="">— Choose a treatment —</option>
+</select></div>
+<div id="service-info" style="display: none;" class="alert alert-info"></div>
+</div>
+<div class="card" style="margin-bottom: 1.5rem;">
+<h3 style="font-size: 1rem; color: var(--gold); margin-bottom: 1rem; font-weight: 400;">2. Choose Therapist</h3>
+<div class="form-group" style="margin-bottom: 0;"><select id="book-therapist" onchange="checkTherapistAvailability()">
+<option value="">— Any available therapist —</option>
+</select></div>
+<div class="therapist-conflict" id="therapist-conflict-msg"></div>
+</div>
+<div class="card">
+<h3 style="font-size: 1rem; color: var(--gold); margin-bottom: 1rem; font-weight: 400;">3. Pick Date &amp; Time</h3>
+<div class="form-group"><label>Date</label> <input type="date" id="book-date" /></div>
+<div id="slots-container" style="display: none;"><label style="font-size: .7rem; letter-spacing: .2em; text-transform: uppercase; color: var(--text-muted); display: block; margin-bottom: .5rem;">Available Slots</label>
+<div class="time-slots" id="time-slots"></div>
+</div>
+</div>
+</div>
+<div class="card">
+<h3 style="font-size: 1rem; color: var(--gold); margin-bottom: 1rem; font-weight: 400;">4. Your Details</h3>
+<div class="form-group"><label>Full Name *</label><input type="text" id="book-name" placeholder="Your full name" /></div>
+<div class="form-group"><label>Phone *</label><input type="text" id="book-phone" placeholder="+62 8xx xxxx xxxx" /></div>
+<div class="form-group"><label>Email</label><input type="email" id="book-email" placeholder="your@email.com" /></div>
+<div class="form-group"><label>Special Requests</label><textarea id="book-notes" rows="3" placeholder="Allergies, preferences..."></textarea></div>
+<div id="booking-summary" class="alert alert-info" style="display: none;"></div>
+<div class="alert alert-warn" style="margin-top: 1rem;">After booking you will have <strong>1 hour</strong> to upload payment proof, otherwise the booking will be automatically cancelled.</div>
+<button class="btn btn-primary btn-full" style="margin-top: 1rem;" onclick="submitBooking()">Confirm &amp; Proceed to Payment</button></div>
+</div>
+</div>
+<!-- PAYMENT PAGE -->
+<div id="page-payment" class="page">
+<div class="page-header">
+<h2>Payment</h2>
+<p>Upload your transfer proof to confirm your reservation</p>
+</div>
+<div id="payment-list"></div>
+</div>
+<!-- STATUS -->
+<div id="page-status" class="page">
+<div class="page-header">
+<h2>My Appointments</h2>
+<p>Track the real-time status of your bookings</p>
+</div>
+<div id="status-results"></div>
+</div>
+<!-- MASTER DATA (ADMIN) -->
+<div id="page-master" class="page">
+<div class="page-header">
+<h2>Master Data</h2>
+<p>Manage bookings, services, therapists, and customer accounts</p>
+</div>
+<div class="tabs"><button class="tab-btn active" data-tab="bookings" onclick="showMasterTab('bookings',this)">Bookings</button> <button class="tab-btn" data-tab="payments" onclick="showMasterTab('payments',this)">Payments</button> <button class="tab-btn" data-tab="services" onclick="showMasterTab('services',this)">Services</button> <button class="tab-btn" data-tab="therapists" onclick="showMasterTab('therapists',this)">Therapists</button> <button class="tab-btn" data-tab="customers" onclick="showMasterTab('customers',this)">Customers</button></div>
+<div id="master-bookings">
+<div class="filter-bar"><input type="text" id="master-search" placeholder="Search..." oninput="renderMasterBookings()" /><select id="master-filter" onchange="renderMasterBookings()">
+<option value="all">All Status</option>
+<option value="awaiting_payment">Awaiting Payment</option>
+<option value="pending">Pending Verification</option>
+<option value="confirmed">Confirmed</option>
+<option value="inprogress">In Progress</option>
+<option value="done">Done</option>
+<option value="cancelled">Cancelled</option>
+</select><button class="btn btn-primary btn-sm" onclick="openAddBookingModal()">+ Add</button></div>
+<div class="card table-wrap">
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Customer</th>
+<th>Service</th>
+<th>Therapist</th>
+<th>Date</th>
+<th>Time</th>
+<th>Status</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody id="master-bookings-body"></tbody>
+</table>
+</div>
+</div>
+<div id="master-payments" style="display: none;">
+<div class="alert alert-info">Review uploaded payment proofs and verify or reject them.</div>
+<div class="card table-wrap">
+<table>
+<thead>
+<tr>
+<th>Booking ID</th>
+<th>Customer</th>
+<th>Amount</th>
+<th>Proof</th>
+<th>Uploaded</th>
+<th>Payment Status</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody id="master-payments-body"></tbody>
+</table>
+</div>
+</div>
+<div id="master-services" style="display: none;">
+<div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;"><button class="btn btn-primary btn-sm" onclick="openAddServiceModal()">+ Add Service</button></div>
+<div class="card table-wrap">
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Name</th>
+<th>Category</th>
+<th>Duration</th>
+<th>Price (Rp)</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody id="master-services-body"></tbody>
+</table>
+</div>
+</div>
+<div id="master-therapists" style="display: none;">
+<div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;"><button class="btn btn-primary btn-sm" onclick="openAddTherapistModal()">+ Add Therapist</button></div>
+<div class="card table-wrap">
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Name</th>
+<th>Specialty</th>
+<th>Experience</th>
+<th>Phone</th>
+<th>Status</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody id="master-therapists-body"></tbody>
+</table>
+</div>
+</div>
+<div id="master-customers" style="display: none;">
+<div style="display: flex; justify-content: flex-end; margin-bottom: 1rem;"><button class="btn btn-primary btn-sm" onclick="openAddCustomerModal()">+ Add Customer Account</button></div>
+<div class="card table-wrap">
+<table>
+<thead>
+<tr>
+<th>ID</th>
+<th>Username</th>
+<th>Full Name</th>
+<th>Phone</th>
+<th>Email</th>
+<th>Created</th>
+<th>Actions</th>
+</tr>
+</thead>
+<tbody id="master-customers-body"></tbody>
+</table>
+</div>
+</div>
+</div>
+<!-- REPORTS -->
+<div id="page-reports" class="page">
+<div class="page-header">
+<h2>Reports &amp; Export</h2>
+<p>Analytics and data export</p>
+</div>
+<div class="stat-grid" id="report-stats"></div>
+<div class="grid-2" style="margin-bottom: 1.5rem;">
+<div class="card">
+<h3 style="font-size: 1rem; color: var(--gold); margin-bottom: 1rem; font-weight: 400;">Revenue by Service</h3>
+<div class="bar-chart" id="revenue-chart"></div>
+</div>
+<div class="card">
+<h3 style="font-size: 1rem; color: var(--gold); margin-bottom: 1rem; font-weight: 400;">Bookings by Status</h3>
+<div class="bar-chart" id="status-chart"></div>
+</div>
+</div>
+<div class="card">
+<h3 style="font-size: 1rem; color: var(--gold); margin-bottom: 1rem; font-weight: 400;">Export Data</h3>
+<div style="display: flex; gap: 1rem; flex-wrap: wrap;"><button class="btn btn-outline" onclick="exportCSV('bookings')">Export Bookings CSV</button> <button class="btn btn-outline" onclick="exportCSV('customers')">Export Customers CSV</button> <button class="btn btn-outline" onclick="exportCSV('revenue')">Export Revenue CSV</button> <button class="btn btn-outline" onclick="window.print()">Print Report</button></div>
+</div>
+</div>
+</main></div>
+<!-- MODAL -->
+<div id="modal-overlay" class="modal-overlay" style="display: none;" onclick="closeModalOutside(event)">
+<div class="modal" id="modal-content"></div>
+</div>
+<p>
+<script>
+var currentUser = null;
+var services = [], therapists = [], bookings = [], customers = [];
+var selectedSlot = null, masterTab = 'bookings';
+var paymentCountdowns = {};
+
+// =========== HELPERS ===========
+
+// Returns a Date object representing current time in Asia/Jakarta (UTC+7)
+function nowJakarta(){
+  // Use Intl to get Jakarta wall-clock time, reconstruct as a local Date
+  var fmt = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Jakarta',
+    year:'numeric', month:'2-digit', day:'2-digit',
+    hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:false
+  });
+  var parts = fmt.formatToParts(new Date());
+  var p = {};
+  parts.forEach(function(x){ p[x.type] = x.value; });
+  // Build as a local Date (no timezone offset applied)
+  return new Date(p.year+'-'+p.month+'-'+p.day+'T'+p.hour+':'+p.minute+':'+p.second);
+}
+
+// Returns today's date string in Jakarta timezone: "YYYY-MM-DD"
+function todayStr(){
+  var d = nowJakarta();
+  var mm = String(d.getMonth()+1).padStart(2,'0');
+  var dd = String(d.getDate()).padStart(2,'0');
+  return d.getFullYear()+'-'+mm+'-'+dd;
+}
+
+// Returns current time in Jakarta as "HH:MM"
+function nowTimeStr(){
+  var d = nowJakarta();
+  return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+}
+function findById(arr,id){ for(var i=0;i<arr.length;i++) if(arr[i].id===id) return arr[i]; return null; }
+function fmt(n){ return Number(n).toLocaleString('id-ID'); }
+function categoryLabel(c){ return {massage:'Massage',facial:'Facial',body:'Body Treatment',package:'Package'}[c]||c; }
+
+function badgeHtml(status){
+  var map={awaiting_payment:'badge-awaiting_payment',pending:'badge-pending',confirmed:'badge-confirmed',inprogress:'badge-inprogress',done:'badge-done',cancelled:'badge-cancelled',uploaded:'badge-uploaded',verified:'badge-verified',rejected:'badge-rejected',awaiting:'badge-pending'};
+  var labels={awaiting_payment:'Awaiting Payment',pending:'Pending Verification',confirmed:'Confirmed',inprogress:'In Progress',done:'Completed',cancelled:'Cancelled',uploaded:'Proof Uploaded',verified:'Verified',rejected:'Rejected',awaiting:'Awaiting Upload'};
+  return '<span class="badge '+(map[status]||'')+'">'+(labels[status]||status)+'</span>';
+}
+
+// =========== API CALLS ===========
+function api(url, data, cb){
+  var opts = data
+    ? { method:'POST', body: new URLSearchParams(data),
+        headers:{'X-Requested-With':'XMLHttpRequest'},
+        credentials:'same-origin' }
+    : { headers:{'X-Requested-With':'XMLHttpRequest'},
+        credentials:'same-origin' };
+  fetch('api/'+url, opts)
+    .then(function(r){
+      if(!r.ok) throw new Error('HTTP '+r.status);
+      return r.text();
+    })
+    .then(function(txt){
+      try{ cb(JSON.parse(txt)); }
+      catch(e){ console.error('JSON parse error from api/'+url+':', txt.substring(0,200)); cb({status:'error',message:'Invalid server response'}); }
+    })
+    .catch(function(e){ console.error('Fetch error api/'+url+':', e); cb({status:'error',message:'Server error: '+e.message}); });
+}
+
+function loadAll(cb){
+  var done = 0;
+  var hdrs = {'X-Requested-With':'XMLHttpRequest'};
+  function check(){ if(++done===2 && cb) cb(); }
+  fetch('api/get_services.php',{headers:hdrs,credentials:'same-origin'})
+    .then(function(r){ return r.text(); })
+    .then(function(t){ try{ services=JSON.parse(t); }catch(e){ console.error('get_services parse error:',t.substring(0,200)); } check(); })
+    .catch(function(e){ console.error('get_services fetch error:',e); check(); });
+  fetch('api/get_therapists.php',{headers:hdrs,credentials:'same-origin'})
+    .then(function(r){ return r.text(); })
+    .then(function(t){ try{ therapists=JSON.parse(t); }catch(e){ console.error('get_therapists parse error:',t.substring(0,200)); } check(); })
+    .catch(function(e){ console.error('get_therapists fetch error:',e); check(); });
+}
+
+function loadBookings(cb){
+  var params = '?user_id='+(currentUser?currentUser.id:0)+'&role='+(currentUser?currentUser.role:'');
+  var hdrs = {'X-Requested-With':'XMLHttpRequest'};
+  fetch('api/get_bookings.php'+params,{headers:hdrs,credentials:'same-origin'})
+    .then(function(r){ return r.text(); })
+    .then(function(t){
+      try{ bookings=JSON.parse(t); }
+      catch(e){ console.error('get_bookings parse error:',t.substring(0,200)); bookings=[]; }
+      if(cb) cb();
+    })
+    .catch(function(e){ console.error('get_bookings fetch error:',e); bookings=[]; if(cb) cb(); });
+}
+
+function loadCustomers(cb){
+  api('manage_customer.php',{action:'list'},function(d){
+    customers=Array.isArray(d)?d:[];
+    if(cb) cb();
+  });
+}
+
+// =========== AUTH ===========
+function doLogin(){
+  var u = document.getElementById('login-user').value.trim();
+  var p = document.getElementById('login-pass').value.trim();
+  api('login.php',{username:u,password:p},function(data){
+    if(data.status==='success'){
+      currentUser = data.user;
+      document.getElementById('login-screen').style.display='none';
+      document.getElementById('app').classList.add('visible');
+      document.getElementById('sidebar-username').textContent = currentUser.full_name || currentUser.username;
+      var badge = document.getElementById('role-badge');
+      badge.textContent = currentUser.role==='admin'?'Administrator':'Customer';
+      badge.className = 'role-badge '+(currentUser.role==='admin'?'role-admin':'role-user');
+      document.getElementById('admin-nav').style.display = currentUser.role==='admin'?'block':'none';
+      loadAll(function(){ loadBookings(function(){ showPage('dashboard'); }); });
+    } else {
+      document.getElementById('login-error').textContent = data.message||'Login failed';
+    }
+  });
+}
+
+function logout(){
+  clearAllCountdowns();
+  currentUser=null;
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('login-user').value='';
+  document.getElementById('login-pass').value='';
+  document.getElementById('login-error').textContent='';
+}
+
+// =========== NAV ===========
+function showPage(id){
+  document.querySelectorAll('.page').forEach(function(p){ p.classList.remove('active'); });
+  document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); });
+  var page = document.getElementById('page-'+id);
+  if(page) page.classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(function(n){
+    if(n.getAttribute('onclick')&&n.getAttribute('onclick').indexOf("'"+id+"'")>=0) n.classList.add('active');
+  });
+  if(id==='dashboard') renderDashboard();
+  if(id==='catalog') renderCatalog('all');
+  if(id==='booking') initBooking();
+  if(id==='payment') renderPaymentPage();
+  if(id==='status') renderMyStatus();
+  if(id==='master'){ if(currentUser&&currentUser.role==='admin') showMasterTab(masterTab); }
+  if(id==='reports') renderReports();
+}
+
+// =========== DASHBOARD ===========
+function renderDashboard(){
+  if(!currentUser) return;
+  var isAdmin = currentUser.role==='admin';
+  document.getElementById('dash-sub').textContent = isAdmin ? "Admin overview — all bookings" : "Welcome back, "+currentUser.full_name;
+
+  if(isAdmin){
+    var total=bookings.length;
+    var awaitingPay=bookings.filter(function(b){return b.status==='awaiting_payment';}).length;
+    var pending=bookings.filter(function(b){return b.status==='pending';}).length;
+    var revenue=0; bookings.forEach(function(b){ if(b.status==='done'){var sv=findById(services,b.service_id);if(sv)revenue+=parseInt(sv.price);} });
+    document.getElementById('stat-grid').innerHTML=
+      '<div class="stat-card"><div class="label">Total Bookings</div><div class="value">'+total+'</div></div>'+
+      '<div class="stat-card"><div class="label">Awaiting Payment</div><div class="value">'+awaitingPay+'</div></div>'+
+      '<div class="stat-card"><div class="label">Pending Verification</div><div class="value">'+pending+'</div></div>'+
+      '<div class="stat-card"><div class="label">Revenue (Done)</div><div class="value" style="font-size:1.2rem;">Rp '+fmt(revenue)+'</div></div>';
+    document.getElementById('sched-title').textContent = "Today's Schedule";
+    var todayBks=bookings.filter(function(b){return b.date===todayStr();}).sort(function(a,b){return a.time.localeCompare(b.time);});
+    var sched=document.getElementById('today-schedule');
+    if(!todayBks.length){ sched.innerHTML='<p style="color:var(--text-muted);font-size:.85rem;">No appointments today.</p>'; return; }
+    sched.innerHTML=todayBks.map(function(b){
+      var sv=findById(services,b.service_id); var th=findById(therapists,b.therapist_id);
+      return '<div style="display:flex;align-items:center;gap:1rem;padding:.7rem 0;border-bottom:1px solid rgba(255,255,255,.04);">'+
+        '<div style="min-width:50px;font-family:Cormorant Garamond,serif;font-size:1.1rem;color:var(--gold);">'+b.time+'</div>'+
+        '<div style="flex:1;"><p style="font-size:.85rem;">'+b.customer+'</p>'+
+        '<p style="font-size:.75rem;color:var(--text-muted);">'+(sv?sv.name:'—')+(th?' · '+th.name:'')+'</p></div>'+
+        '<div>'+badgeHtml(b.status)+'</div></div>';
+    }).join('');
+  } else {
+    var mine=bookings.filter(function(b){return b.user_id==currentUser.id;});
+    var awP=mine.filter(function(b){return b.status==='awaiting_payment';}).length;
+    var conf=mine.filter(function(b){return b.status==='confirmed';}).length;
+    var done=mine.filter(function(b){return b.status==='done';}).length;
+    document.getElementById('stat-grid').innerHTML=
+      '<div class="stat-card"><div class="label">My Bookings</div><div class="value">'+mine.length+'</div></div>'+
+      '<div class="stat-card"><div class="label">Awaiting Payment</div><div class="value">'+awP+'</div></div>'+
+      '<div class="stat-card"><div class="label">Confirmed</div><div class="value">'+conf+'</div></div>'+
+      '<div class="stat-card"><div class="label">Completed</div><div class="value">'+done+'</div></div>';
+    document.getElementById('sched-title').textContent = "Upcoming Appointments";
+    var upcoming=mine.filter(function(b){return b.date>=todayStr()&&b.status!=='cancelled';}).sort(function(a,b){return a.date.localeCompare(b.date)||a.time.localeCompare(b.time);}).slice(0,5);
+    var sched=document.getElementById('today-schedule');
+    if(!upcoming.length){ sched.innerHTML='<p style="color:var(--text-muted);font-size:.85rem;">No upcoming appointments.</p>'; return; }
+    sched.innerHTML=upcoming.map(function(b){
+      var sv=findById(services,b.service_id);
+      return '<div style="display:flex;align-items:center;gap:1rem;padding:.7rem 0;border-bottom:1px solid rgba(255,255,255,.04);">'+
+        '<div style="min-width:80px;font-size:.78rem;color:var(--text-muted);">'+b.date+'<br><span style="color:var(--gold);">'+b.time+'</span></div>'+
+        '<div style="flex:1;"><p style="font-size:.85rem;">'+(sv?sv.name:'—')+'</p></div>'+
+        '<div>'+badgeHtml(b.status)+'</div></div>';
+    }).join('');
+  }
+}
+
+// =========== CATALOG ===========
+function renderCatalog(filter){
+  var items=filter==='all'?services:services.filter(function(s){return s.category===filter;});
+  document.getElementById('catalog-grid').innerHTML=items.map(function(s){
+    return '<div class="service-card"><h4>'+s.name+'</h4>'+
+      '<div class="duration">'+s.duration+' min · '+categoryLabel(s.category)+'</div>'+
+      '<p class="desc">'+(s.description||'')+'</p>'+
+      '<div class="price">Rp '+fmt(s.price)+'</div>'+
+      '<button class="btn btn-outline btn-sm" style="margin-top:1rem;" onclick="goBook(\''+s.id+'\')">Book Now</button></div>';
+  }).join('');
+}
+function filterCatalog(cat,el){
+  document.querySelectorAll('#page-catalog .tab-btn').forEach(function(b){b.classList.remove('active');});
+  el.classList.add('active'); renderCatalog(cat);
+}
+function goBook(sid){ showPage('booking'); setTimeout(function(){ document.getElementById('book-service').value=sid; updateServiceInfo(); },50); }
+
+// =========== BOOKING ===========
+function initBooking(){
+  var sel=document.getElementById('book-service');
+  sel.innerHTML='<option value="">— Choose a treatment —</option>'+services.map(function(s){return '<option value="'+s.id+'">'+s.name+' — Rp '+fmt(s.price)+'</option>';}).join('');
+  var th=document.getElementById('book-therapist');
+  th.innerHTML='<option value="">— Any available therapist —</option>'+therapists.filter(function(t){return t.status==='active';}).map(function(t){return '<option value="'+t.id+'">'+t.name+' ('+t.specialty+')</option>';}).join('');
+  var tStr = todayStr();
+  var dateEl = document.getElementById('book-date');
+  dateEl.min = tStr;
+  dateEl.value = '';
+  // Extra: if user manually types a past date, reset it
+  dateEl.onchange = function(){
+    if(this.value && this.value < tStr){
+      this.value = tStr;
+      alert('Past dates are not available. Date has been reset to today.');
+    }
+    loadSlots();
+  };
+  document.getElementById('slots-container').style.display='none';
+  document.getElementById('service-info').style.display='none';
+  document.getElementById('booking-summary').style.display='none';
+  document.getElementById('therapist-conflict-msg').style.display='none';
+
+  // Pre-fill name/phone/email from logged-in user
+  if(currentUser){
+    document.getElementById('book-name').value = currentUser.full_name||'';
+    document.getElementById('book-phone').value = currentUser.phone||'';
+    document.getElementById('book-email').value = currentUser.email||'';
+  }
+  selectedSlot=null;
+}
+
+function updateServiceInfo(){
+  var sid=document.getElementById('book-service').value;
+  var sv=findById(services,sid);
+  var el=document.getElementById('service-info');
+  if(sv){ el.style.display='block'; el.textContent=sv.name+' · '+sv.duration+' min · Rp '+fmt(sv.price); }
+  else el.style.display='none';
+  checkTherapistAvailability();
+  updateBookingSummary();
+}
+
+// Check therapist overlap considering service duration
+function checkTherapistAvailability(){
+  var thId=document.getElementById('book-therapist').value;
+  var svId=document.getElementById('book-service').value;
+  var date=document.getElementById('book-date').value;
+  var msg=document.getElementById('therapist-conflict-msg');
+  msg.style.display='none';
+  if(!thId||!svId||!date||!selectedSlot) return;
+  api('check_therapist.php',{therapist_id:thId,service_id:svId,date:date,time:selectedSlot},function(d){
+    if(!d.available){
+      msg.textContent='⚠ This therapist is busy during this time (including service duration). Please choose another therapist or time.';
+      msg.style.display='block';
+    } else msg.style.display='none';
+  });
+}
+
+function loadSlots(){
+  var date=document.getElementById('book-date').value;
+  var thId=document.getElementById('book-therapist').value;
+  var svId=document.getElementById('book-service').value;
+  if(!date) return;
+  var sv=findById(services,svId);
+  var duration=sv?parseInt(sv.duration):60;
+  var totalTherapists=therapists.filter(function(t){return t.status==='active';}).length||1;
+  var isToday = (date === todayStr());
+  var currentMins = isToday ? timeToMins(nowTimeStr()) : -1;
+  var slots=['09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00'];
+  document.getElementById('slots-container').style.display='block';
+  document.getElementById('time-slots').innerHTML=slots.map(function(s){
+    var slotMins=timeToMins(s);
+    // Grey out slots that have already passed today
+    if(isToday && slotMins <= currentMins){
+      return '<div class="slot taken" title="This time has already passed">'+s+'</div>';
+    }
+    var taken=false;
+    if(thId){
+      // Specific therapist chosen: block if that therapist overlaps
+      taken=bookings.some(function(b){
+        if(b.therapist_id!==thId||b.date!==date||b.status==='cancelled') return false;
+        var bStart=timeToMins(b.time);
+        var bDur=parseInt((findById(services,b.service_id)||{duration:60}).duration);
+        return slotMins<(bStart+bDur)&&(slotMins+duration)>bStart;
+      });
+    } else {
+      // Any therapist: only block if ALL active therapists are busy
+      var busySet={};
+      bookings.forEach(function(b){
+        if(b.date!==date||b.status==='cancelled') return;
+        var bStart=timeToMins(b.time);
+        var bDur=parseInt((findById(services,b.service_id)||{duration:60}).duration);
+        if(slotMins<(bStart+bDur)&&(slotMins+duration)>bStart) busySet[b.therapist_id]=true;
+      });
+      taken=Object.keys(busySet).length>=totalTherapists;
+    }
+    return '<div class="slot'+(taken?' taken':'')+'" onclick="selectSlot(this,\''+s+'\','+taken+')">'+s+'</div>';
+  }).join('');
+  selectedSlot=null; updateBookingSummary();
+}
+
+function timeToMins(t){
+  var parts=t.split(':'); return parseInt(parts[0])*60+parseInt(parts[1]);
+}
+
+function selectSlot(el,t,taken){
+  if(taken) return;
+  selectedSlot=t;
+  document.querySelectorAll('.slot').forEach(function(s){s.classList.remove('selected');});
+  el.classList.add('selected');
+  checkTherapistAvailability();
+  updateBookingSummary();
+}
+
+function updateBookingSummary(){
+  var sv=findById(services,document.getElementById('book-service').value);
+  var th=findById(therapists,document.getElementById('book-therapist').value);
+  var date=document.getElementById('book-date').value;
+  var sum=document.getElementById('booking-summary');
+  if(sv&&date&&selectedSlot){
+    sum.style.display='block';
+    sum.innerHTML='<strong>Summary:</strong> '+sv.name+' on '+date+' at '+selectedSlot+(th?' with '+th.name:'')+' — Rp '+fmt(sv.price);
+  } else sum.style.display='none';
+}
+
+function submitBooking(){
+  var svId=document.getElementById('book-service').value;
+  var thId=document.getElementById('book-therapist').value;
+  var date=document.getElementById('book-date').value;
+  var name=document.getElementById('book-name').value.trim();
+  var phone=document.getElementById('book-phone').value.trim();
+  var email=document.getElementById('book-email').value.trim();
+  var notes=document.getElementById('book-notes').value.trim();
+
+  // Validate therapist conflict warning
+  var conflictMsg=document.getElementById('therapist-conflict-msg');
+  if(conflictMsg.style.display!=='none'){
+    alert('Please resolve the therapist conflict before confirming.'); return;
+  }
+  if(!svId||!date||!selectedSlot||!name||!phone){
+    alert('Please fill all required fields and select a time slot.'); return;
+  }
+
+  // Guard: prevent past date
+  if(date < todayStr()){
+    alert('You cannot book a reservation for a past date.'); return;
+  }
+  // Guard: prevent past time slot on today
+  if(date === todayStr() && timeToMins(selectedSlot) <= timeToMins(nowTimeStr())){
+    alert('The selected time slot has already passed. Please choose a later time.'); return;
+  }
+
+  // thId can be empty — server will auto-assign or accept any therapist
+
+  api('add_booking.php',{
+    user_id: currentUser.id,
+    customer: name, phone: phone, email: email,
+    service: svId, therapist: thId,
+    date: date, time: selectedSlot, notes: notes
+  },function(data){
+    if(data.status==='success'){
+      loadBookings(function(){
+        showModal('<h3>Booking Created!</h3>'+
+          '<div class="alert alert-success">Booking ID: <strong>'+data.id+'</strong></div>'+
+          '<div class="alert alert-warn"><strong>Action required:</strong> You have <strong>1 hour</strong> to upload your payment proof. Deadline: '+formatDeadline(data.deadline)+'</div>'+
+          '<p style="font-size:.85rem;color:var(--text-muted);margin-top:1rem;">Amount to transfer: <span style="color:var(--gold);font-size:1.1rem;">Rp '+fmt(data.amount)+'</span></p>'+
+          '<div class="modal-actions"><button class="btn btn-primary" onclick="closeModal();showPage(\'payment\')">Upload Payment Now</button><button class="btn btn-outline" onclick="closeModal()">Later</button></div>');
+        initBooking();
+      });
+    } else if(data.status==='conflict'){
+      alert(data.message);
+    } else {
+      alert(data.message||'Failed to create booking.');
+    }
+  });
+}
+
+// =========== PAYMENT PAGE ===========
+function renderPaymentPage(){
+  loadBookings(function(){
+    var mine=bookings.filter(function(b){ return b.user_id==currentUser.id||(currentUser.role==='admin'); });
+    var payable=mine.filter(function(b){ return b.status==='awaiting_payment'||b.status==='pending'; });
+    var el=document.getElementById('payment-list');
+
+    if(!payable.length){
+      el.innerHTML='<div class="alert alert-info">No pending payments. All your bookings are settled.</div>';
+      return;
+    }
+    el.innerHTML=payable.map(function(b){
+      var sv=findById(services,b.service_id); var th=findById(therapists,b.therapist_id);
+      var amount=sv?parseInt(sv.price):0;
+      var deadline=b.payment_deadline;
+      var deadlineMs=deadline?new Date(deadline).getTime():0;
+      var now=Date.now();
+      var remaining=deadlineMs-now;
+
+      var body='';
+      if(b.status==='awaiting_payment'){
+        body='<div class="payment-box">'+
+          '<p style="font-size:.75rem;letter-spacing:.2em;text-transform:uppercase;color:var(--text-muted);">Transfer Amount</p>'+
+          '<div class="payment-amount">Rp '+fmt(amount)+'</div>'+
+          '<p style="font-size:.8rem;color:var(--text-muted);margin-bottom:.5rem;">Bank: BCA · 1234567890 · Serenity Spa</p>'+
+          (remaining>0?'<p style="font-size:.8rem;color:var(--text-muted);margin-bottom:.5rem;">Time remaining:</p><div class="countdown" id="cd-'+b.id+'">—</div>':'<div class="alert alert-danger">Deadline passed — booking will be cancelled.</div>')+
+          '<div class="upload-zone" id="zone-'+b.id+'" onclick="document.getElementById(\'file-'+b.id+'\').click()">'+
+          '<p style="font-size:.85rem;color:var(--text-muted);">Click to upload transfer proof</p>'+
+          '<p style="font-size:.72rem;color:var(--text-muted);margin-top:.3rem;">JPG, PNG, or PDF · max 5MB</p></div>'+
+          '<input type="file" id="file-'+b.id+'" accept="image/*,.pdf" style="display:none;" onchange="previewProof(\''+b.id+'\',this)"/>'+
+          '<div id="preview-'+b.id+'"></div>'+
+          '<button class="btn btn-primary btn-full" style="margin-top:1rem;" onclick="uploadPayment(\''+b.id+'\')">Submit Payment Proof</button>'+
+          '</div>';
+      } else if(b.status==='pending'){
+        body='<div class="alert alert-info"><strong>Payment proof uploaded.</strong> Waiting for admin verification.</div>'+
+          (b.proof_filename?'<p style="font-size:.8rem;color:var(--text-muted);">Proof file: '+b.proof_filename+'</p>':'');
+      }
+
+      return '<div class="card" style="margin-bottom:1.5rem;">'+
+        '<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem;">'+
+        '<div><h3 style="font-size:1.2rem;color:var(--gold);font-weight:300;">'+b.id+'</h3>'+
+        '<p style="font-size:.8rem;color:var(--text-muted);">'+(sv?sv.name:'—')+' · '+b.date+' '+b.time+(th?' · '+th.name:'')+'</p></div>'+
+        '<div>'+badgeHtml(b.status)+'</div></div>'+body+'</div>';
+    }).join('');
+
+    // Start countdown timers
+    clearAllCountdowns();
+    payable.forEach(function(b){
+      if(b.status==='awaiting_payment'&&b.payment_deadline){
+        startCountdown(b.id, b.payment_deadline);
+      }
+    });
+  });
+}
+
+function previewProof(bid, input){
+  if(!input.files||!input.files[0]) return;
+  var zone=document.getElementById('zone-'+bid);
+  var prev=document.getElementById('preview-'+bid);
+  zone.classList.add('has-file');
+  zone.querySelector('p').textContent=input.files[0].name;
+  if(input.files[0].type.startsWith('image/')){
+    var reader=new FileReader();
+    reader.onload=function(e){ prev.innerHTML='<img src="'+e.target.result+'" class="upload-preview"/>'; };
+    reader.readAsDataURL(input.files[0]);
+  } else {
+    prev.innerHTML='<p style="font-size:.8rem;color:var(--gold);margin:.5rem 0;">PDF ready to upload.</p>';
+  }
+}
+
+function uploadPayment(bid){
+  var fileInput=document.getElementById('file-'+bid);
+  if(!fileInput||!fileInput.files||!fileInput.files[0]){
+    alert('Please select a payment proof file first.'); return;
+  }
+  var formData=new FormData();
+  formData.append('booking_id',bid);
+  formData.append('proof',fileInput.files[0]);
+  fetch('api/upload_payment.php',{method:'POST',body:formData})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if(d.status==='success'){
+        showModal('<h3>Proof Uploaded!</h3>'+
+          '<div class="alert alert-success">Your payment proof has been submitted. The admin will verify it shortly.</div>'+
+          '<div class="modal-actions"><button class="btn btn-primary" onclick="closeModal();showPage(\'status\')">View Status</button></div>');
+        loadBookings();
+      } else alert(d.message||'Upload failed.');
+    });
+}
+
+// Countdown timer logic
+var countdownIntervals={};
+function clearAllCountdowns(){ for(var k in countdownIntervals) clearInterval(countdownIntervals[k]); countdownIntervals={}; }
+function startCountdown(bid, deadline){
+  var deadlineMs=new Date(deadline).getTime();
+  function tick(){
+    var el=document.getElementById('cd-'+bid);
+    if(!el){ clearInterval(countdownIntervals[bid]); return; }
+    var remaining=deadlineMs-Date.now();
+    if(remaining<=0){
+      el.textContent='EXPIRED';
+      el.className='countdown urgent';
+      clearInterval(countdownIntervals[bid]);
+      loadBookings(function(){ renderPaymentPage(); });
+      return;
+    }
+    var mins=Math.floor(remaining/60000);
+    var secs=Math.floor((remaining%60000)/1000);
+    el.textContent=(mins<10?'0':'')+mins+':'+(secs<10?'0':'')+secs;
+    el.className='countdown'+(remaining<600000?' urgent':'');
+  }
+  tick();
+  countdownIntervals[bid]=setInterval(tick,1000);
+}
+function formatDeadline(ds){
+  if(!ds) return 'unknown';
+  var d=new Date(ds);
+  return d.toLocaleString('id-ID',{hour:'2-digit',minute:'2-digit',day:'numeric',month:'short'});
+}
+
+// =========== MY STATUS ===========
+function renderMyStatus(){
+  loadBookings(function(){
+    var mine = currentUser.role==='admin' ? bookings : bookings.filter(function(b){return b.user_id==currentUser.id;});
+    var el=document.getElementById('status-results');
+    if(!mine.length){ el.innerHTML='<div class="alert alert-info">No bookings found.</div>'; return; }
+    var steps=['awaiting_payment','pending','confirmed','inprogress','done'];
+    var stepLabels=['Awaiting Payment','Pending Verification','Confirmed','In Progress','Completed'];
+    el.innerHTML=mine.map(function(b){
+      var sv=findById(services,b.service_id); var th=findById(therapists,b.therapist_id);
+      var cur=b.status==='cancelled'?-1:steps.indexOf(b.status);
+      var tracker=b.status==='cancelled'?'<div class="alert alert-danger" style="margin-top:1rem;">This appointment has been cancelled.</div>':
+        '<div class="tracker-steps">'+steps.map(function(s,i){
+          var cls=cur>i?'done':cur===i?'active':'';
+          return '<div class="tracker-step '+cls+'"><div class="step-dot">'+(cur>i?'✓':i+1)+'</div><div class="step-label">'+stepLabels[i]+'</div></div>';
+        }).join('')+'</div>';
+      var adminActions='';
+      if(currentUser.role==='admin'){
+        adminActions='<div style="display:flex;gap:.5rem;margin-top:1rem;flex-wrap:wrap;">'+
+          (b.status==='confirmed'?'<button class="btn btn-primary btn-sm" onclick="adminUpdateStatus(\''+b.id+'\',\'inprogress\')">Start Session</button>':'')+
+          (b.status==='inprogress'?'<button class="btn btn-primary btn-sm" onclick="adminUpdateStatus(\''+b.id+'\',\'done\')">Mark Done</button>':'')+
+          (b.status!=='done'&&b.status!=='cancelled'?'<button class="btn btn-danger btn-sm" onclick="adminUpdateStatus(\''+b.id+'\',\'cancelled\')">Cancel</button>':'')+
+          '</div>';
+      }
+      return '<div class="card" style="margin-bottom:1rem;">'+
+        '<div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:1rem;">'+
+        '<div><h3 style="font-size:1.2rem;color:var(--gold);font-weight:300;">'+b.id+'</h3>'+
+        '<p style="font-size:.78rem;color:var(--text-muted);">'+(sv?sv.name:'—')+' · '+b.date+' at '+b.time+(th?' · '+th.name:'')+'</p></div>'+
+        '<div>'+badgeHtml(b.status)+'</div></div>'+tracker+adminActions+'</div>';
+    }).join('');
+  });
+}
+
+function adminUpdateStatus(id,status){
+  api('update_booking.php',{id:id,status:status},function(d){
+    if(d.status==='success') loadBookings(function(){ renderMyStatus(); });
+    else alert(d.message||'Error updating status');
+  });
+}
+
+// =========== MASTER DATA ===========
+function showMasterTab(tab,el){
+  masterTab=tab;
+  ['bookings','payments','services','therapists','customers'].forEach(function(t){
+    document.getElementById('master-'+t).style.display=t===tab?'block':'none';
+  });
+  // Activate correct tab button
+  document.querySelectorAll('#page-master .tab-btn').forEach(function(b){
+    b.classList.toggle('active', b.getAttribute('data-tab')===tab);
+  });
+
+  if(tab==='bookings'){
+    loadBookings(renderMasterBookings);
+  } else if(tab==='payments'){
+    loadBookings(renderMasterPayments);
+  } else if(tab==='services'){
+    var hdrs={'X-Requested-With':'XMLHttpRequest'};
+    fetch('api/get_services.php',{headers:hdrs,credentials:'same-origin'})
+      .then(function(r){return r.text();})
+      .then(function(t){ try{ services=JSON.parse(t); }catch(e){ console.error('services parse:',t.substring(0,200)); } renderMasterServices(); })
+      .catch(function(e){ console.error('services fetch:',e); renderMasterServices(); });
+  } else if(tab==='therapists'){
+    var hdrs={'X-Requested-With':'XMLHttpRequest'};
+    fetch('api/get_therapists.php',{headers:hdrs,credentials:'same-origin'})
+      .then(function(r){return r.text();})
+      .then(function(t){ try{ therapists=JSON.parse(t); }catch(e){ console.error('therapists parse:',t.substring(0,200)); } renderMasterTherapists(); })
+      .catch(function(e){ console.error('therapists fetch:',e); renderMasterTherapists(); });
+  } else if(tab==='customers'){
+    loadCustomers(renderMasterCustomers);
+  }
+}
+
+function renderMasterBookings(){
+  var q=(document.getElementById('master-search')||{}).value||'';
+  q=q.toLowerCase();
+  var f=(document.getElementById('master-filter')||{}).value||'all';
+  var bks=bookings.filter(function(b){
+    var sv=findById(services,b.service_id);
+    var match=(b.customer||'').toLowerCase().indexOf(q)>=0||(b.id||'').toLowerCase().indexOf(q)>=0||(sv&&sv.name.toLowerCase().indexOf(q)>=0);
+    return match&&(f==='all'||b.status===f);
+  });
+  document.getElementById('master-bookings-body').innerHTML=bks.map(function(b){
+    var sv=findById(services,b.service_id); var th=findById(therapists,b.therapist_id);
+    return '<tr><td style="color:var(--text-muted);font-size:.78rem;">'+b.id+'</td>'+
+      '<td>'+b.customer+'<br><span style="font-size:.72rem;color:var(--text-muted);">'+b.phone+'</span></td>'+
+      '<td>'+(sv?sv.name:'—')+'</td><td>'+(th?th.name:'—')+'</td>'+
+      '<td>'+b.date+'</td><td>'+b.time+'</td><td>'+badgeHtml(b.status)+'</td>'+
+      '<td style="white-space:nowrap;">'+
+      '<button class="btn btn-outline btn-sm" onclick="openEditBookingModal(\''+b.id+'\')">Edit</button></td></tr>';
+  }).join('');
+}
+
+function renderMasterPayments(){
+  var bks=bookings.filter(function(b){return b.status==='awaiting_payment'||b.status==='pending'||b.status==='confirmed';});
+  document.getElementById('master-payments-body').innerHTML=bks.map(function(b){
+    var sv=findById(services,b.service_id);
+    var amount=sv?fmt(sv.price):'—';
+    var proofHtml=b.proof_filename
+      ?'<img src="uploads/payments/'+b.proof_filename+'" class="proof-thumb" onclick="viewProof(\''+b.proof_filename+'\')" title="Click to view"/>'
+      :'<span style="color:var(--text-muted);font-size:.78rem;">None</span>';
+    var payStatus=b.payment_status||'awaiting';
+    var actions='';
+    if(payStatus==='uploaded'){
+      actions='<button class="btn btn-success btn-sm" onclick="verifyPayment(\''+b.id+'\',\'verify\')">Verify</button> '+
+              '<button class="btn btn-danger btn-sm" onclick="verifyPayment(\''+b.id+'\',\'reject\')">Reject</button>';
+    }
+    return '<tr>'+
+      '<td style="color:var(--gold);font-size:.78rem;">'+b.id+'</td>'+
+      '<td>'+b.customer+'</td>'+
+      '<td>Rp '+amount+'</td>'+
+      '<td>'+proofHtml+'</td>'+
+      '<td style="font-size:.75rem;color:var(--text-muted);">'+(b.proof_uploaded_at||'—')+'</td>'+
+      '<td>'+badgeHtml(payStatus)+'</td>'+
+      '<td style="white-space:nowrap;">'+actions+'</td></tr>';
+  }).join('');
+}
+
+function viewProof(filename){
+  showModal('<h3>Payment Proof</h3>'+
+    '<img src="uploads/payments/'+filename+'" style="width:100%;border-radius:2px;"/>'+
+    '<div class="modal-actions"><button class="btn btn-outline" onclick="closeModal()">Close</button></div>');
+}
+
+function verifyPayment(bookingId, action){
+  var note='';
+  if(action==='reject') note=prompt('Reason for rejection (optional):','Proof not clear')||'';
+  api('verify_payment.php',{booking_id:bookingId,action:action,admin_id:currentUser.id,note:note},function(d){
+    if(d.status==='success'){
+      loadBookings(function(){ renderMasterPayments(); });
+    } else alert(d.message||'Error');
+  });
+}
+
+// --- THERAPISTS MASTER ---
+function renderMasterTherapists(){
+  document.getElementById('master-therapists-body').innerHTML=therapists.map(function(t){
+    return '<tr><td style="color:var(--text-muted);font-size:.78rem;">'+t.id+'</td>'+
+      '<td>'+t.name+'</td><td>'+t.specialty+'</td><td>'+t.experience+'</td><td>'+(t.phone||'—')+'</td>'+
+      '<td>'+badgeHtml(t.status==='active'?'confirmed':'cancelled')+'</td>'+
+      '<td style="white-space:nowrap;">'+
+      '<button class="btn btn-outline btn-sm" onclick="openEditTherapistModal(\''+t.id+'\')">Edit</button> '+
+      '<button class="btn btn-danger btn-sm" onclick="deleteTherapist(\''+t.id+'\')">Del</button></td></tr>';
+  }).join('');
+}
+
+function openAddTherapistModal(){
+  showModal('<h3>Add Therapist</h3>'+
+    '<div class="form-group"><label>ID (e.g. T006)</label><input type="text" id="nt-id" placeholder="T006"/></div>'+
+    '<div class="form-group"><label>Full Name *</label><input type="text" id="nt-name"/></div>'+
+    '<div class="form-group"><label>Specialty</label><input type="text" id="nt-spec"/></div>'+
+    '<div class="form-group"><label>Experience</label><input type="text" id="nt-exp" placeholder="e.g. 3 years"/></div>'+
+    '<div class="form-group"><label>Phone</label><input type="text" id="nt-phone"/></div>'+
+    '<div class="form-group"><label>Status</label><select id="nt-status"><option value="active">Active</option><option value="inactive">Inactive</option></select></div>'+
+    '<div class="modal-actions"><button class="btn btn-primary" onclick="saveNewTherapist()">Save</button><button class="btn btn-outline" onclick="closeModal()">Cancel</button></div>');
+}
+function saveNewTherapist(){
+  var id=document.getElementById('nt-id').value.trim();
+  var name=document.getElementById('nt-name').value.trim();
+  if(!id||!name){alert('ID and name required.');return;}
+  api('manage_therapist.php',{action:'add',id:id,name:name,specialty:document.getElementById('nt-spec').value,experience:document.getElementById('nt-exp').value,phone:document.getElementById('nt-phone').value,status:document.getElementById('nt-status').value},function(d){
+    if(d.status==='success'){
+      fetch('api/get_therapists.php').then(r=>r.json()).then(function(data){ therapists=data; closeModal(); renderMasterTherapists(); });
+    } else alert(d.message||'Error');
+  });
+}
+function openEditTherapistModal(id){
+  var t=findById(therapists,id);
+  showModal('<h3>Edit Therapist</h3>'+
+    '<div class="form-group"><label>Name *</label><input type="text" id="et-name" value="'+t.name+'"/></div>'+
+    '<div class="form-group"><label>Specialty</label><input type="text" id="et-spec" value="'+t.specialty+'"/></div>'+
+    '<div class="form-group"><label>Experience</label><input type="text" id="et-exp" value="'+t.experience+'"/></div>'+
+    '<div class="form-group"><label>Phone</label><input type="text" id="et-phone" value="'+(t.phone||'')+'"/></div>'+
+    '<div class="form-group"><label>Status</label><select id="et-status"><option value="active"'+(t.status==='active'?' selected':'')+'>Active</option><option value="inactive"'+(t.status==='inactive'?' selected':'')+'>Inactive</option></select></div>'+
+    '<div class="modal-actions"><button class="btn btn-primary" onclick="saveEditTherapist(\''+id+'\')">Save</button><button class="btn btn-outline" onclick="closeModal()">Cancel</button></div>');
+}
+function saveEditTherapist(id){
+  api('manage_therapist.php',{action:'edit',id:id,name:document.getElementById('et-name').value,specialty:document.getElementById('et-spec').value,experience:document.getElementById('et-exp').value,phone:document.getElementById('et-phone').value,status:document.getElementById('et-status').value},function(d){
+    if(d.status==='success'){
+      fetch('api/get_therapists.php').then(r=>r.json()).then(function(data){ therapists=data; closeModal(); renderMasterTherapists(); });
+    } else alert(d.message||'Error');
+  });
+}
+function deleteTherapist(id){
+  if(!confirm('Delete therapist '+id+'? If they have active bookings, they will be set to inactive instead.')) return;
+  api('manage_therapist.php',{action:'delete',id:id},function(d){
+    if(d.status==='success'){
+      fetch('api/get_therapists.php').then(r=>r.json()).then(function(data){ therapists=data; renderMasterTherapists(); });
+    } else alert(d.message||'Error');
+  });
+}
+
+// --- SERVICES MASTER ---
+function renderMasterServices(){
+  document.getElementById('master-services-body').innerHTML=services.map(function(s){
+    return '<tr><td style="color:var(--text-muted);font-size:.78rem;">'+s.id+'</td><td>'+s.name+'</td><td>'+categoryLabel(s.category)+'</td>'+
+      '<td>'+s.duration+' min</td><td>'+fmt(s.price)+'</td>'+
+      '<td style="white-space:nowrap;">'+
+      '<button class="btn btn-outline btn-sm" onclick="openEditServiceModal(\''+s.id+'\')">Edit</button> '+
+      '<button class="btn btn-danger btn-sm" onclick="deleteService(\'' + s.id + '\', `' + s.name + '`)">Del</button>'
+      '</td></tr>';
+  }).join('');
+}
+function openAddServiceModal(){
+  showModal('<h3>Add Service</h3>'+
+    '<div class="form-group"><label>Name</label><input type="text" id="ns-name"/></div>'+
+    '<div class="form-group"><label>Category</label><select id="ns-cat"><option value="massage">Massage</option><option value="facial">Facial</option><option value="body">Body</option><option value="package">Package</option></select></div>'+
+    '<div class="form-group"><label>Duration (min)</label><input type="number" id="ns-dur" value="60"/></div>'+
+    '<div class="form-group"><label>Price (Rp)</label><input type="number" id="ns-price" value="300000"/></div>'+
+    '<div class="form-group"><label>Description</label><textarea id="ns-desc" rows="2"></textarea></div>'+
+    '<div class="modal-actions"><button class="btn btn-primary" onclick="saveNewService()">Save</button><button class="btn btn-outline" onclick="closeModal()">Cancel</button></div>');
+}
+function saveNewService(){
+  var name=document.getElementById('ns-name').value.trim();
+  if(!name){alert('Name required.');return;}
+  api('manage_service.php',{
+    action:'add',name:name,
+    category:document.getElementById('ns-cat').value,
+    duration:document.getElementById('ns-dur').value,
+    price:document.getElementById('ns-price').value,
+    description:document.getElementById('ns-desc').value
+  },function(d){
+    if(d.status==='success'){
+      fetch('api/get_services.php').then(r=>r.json()).then(function(data){ services=data; closeModal(); renderMasterServices(); });
+    } else alert(d.message||'Error saving service');
+  });
+}
+function openEditServiceModal(id){
+  var s=findById(services,id);
+  showModal('<h3>Edit Service</h3>'+
+    '<div class="form-group"><label>Name</label><input type="text" id="es-name" value="'+s.name+'"/></div>'+
+    '<div class="form-group"><label>Duration (min)</label><input type="number" id="es-dur" value="'+s.duration+'"/></div>'+
+    '<div class="form-group"><label>Price (Rp)</label><input type="number" id="es-price" value="'+s.price+'"/></div>'+
+    '<div class="form-group"><label>Description</label><textarea id="es-desc" rows="2">'+(s.description||'')+'</textarea></div>'+
+    '<div class="modal-actions"><button class="btn btn-primary" onclick="saveEditService(\''+id+'\')">Save</button><button class="btn btn-outline" onclick="closeModal()">Cancel</button></div>');
+}
+function saveEditService(id){
+  var name=document.getElementById('es-name').value.trim();
+  if(!name){alert('Name required.');return;}
+  api('manage_service.php',{
+    action:'edit',id:id,name:name,
+    duration:document.getElementById('es-dur').value,
+    price:document.getElementById('es-price').value,
+    description:document.getElementById('es-desc').value
+  },function(d){
+    if(d.status==='success'){
+      fetch('api/get_services.php').then(r=>r.json()).then(function(data){ services=data; closeModal(); renderMasterServices(); });
+    } else alert(d.message||'Error saving service');
+  });
+}
+
+function deleteService(id, name){
+  if(!confirm('Are you sure you want to delete "'+name+'" permanently?')) return;
+  api('manage_service.php',{action:'delete',id:id},function(d){
+    if(d.status==='success'){
+      fetch('api/get_services.php',{headers:{'X-Requested-With':'XMLHttpRequest'},credentials:'same-origin'})
+        .then(function(r){return r.text();})
+        .then(function(t){ try{services=JSON.parse(t);}catch(e){} renderMasterServices(); });
+    } else alert(d.message||'Error deleting service');
+  });
+}
+
+// --- CUSTOMER ACCOUNTS MASTER ---
+function renderMasterCustomers(){
+  document.getElementById('master-customers-body').innerHTML=customers.map(function(c){
+    return '<tr><td style="color:var(--text-muted);font-size:.78rem;">'+c.id+'</td>'+
+      '<td style="color:var(--gold);">'+c.username+'</td>'+
+      '<td>'+c.full_name+'</td><td>'+(c.phone||'—')+'</td><td>'+(c.email||'—')+'</td>'+
+      '<td style="font-size:.75rem;color:var(--text-muted);">'+(c.created_at||'').slice(0,10)+'</td>'+
+      '<td style="white-space:nowrap;">'+
+      '<button class="btn btn-outline btn-sm" onclick="openEditCustomerModal('+c.id+')">Edit</button> '+
+      '<button class="btn btn-danger btn-sm" onclick="deleteCustomer('+c.id+',\''+c.full_name+'\')">Del</button></td></tr>';
+  }).join('');
+}
+
+function openAddCustomerModal(){
+  showModal('<h3>Add Customer Account</h3>'+
+    '<div class="alert alert-info">Create a login account so the customer can book online from anywhere.</div>'+
+    '<div class="form-group"><label>Username *</label><input type="text" id="nc-user" placeholder="e.g. budi_pratama"/></div>'+
+    '<div class="form-group"><label>Password *</label><input type="password" id="nc-pass" placeholder="Min 6 characters"/></div>'+
+    '<div class="form-group"><label>Full Name *</label><input type="text" id="nc-name"/></div>'+
+    '<div class="form-group"><label>Phone</label><input type="text" id="nc-phone" placeholder="+62 8xx xxxx xxxx"/></div>'+
+    '<div class="form-group"><label>Email</label><input type="email" id="nc-email"/></div>'+
+    '<div class="modal-actions"><button class="btn btn-primary" onclick="saveNewCustomer()">Create Account</button><button class="btn btn-outline" onclick="closeModal()">Cancel</button></div>');
+}
+function saveNewCustomer(){
+  var user=document.getElementById('nc-user').value.trim();
+  var pass=document.getElementById('nc-pass').value;
+  var name=document.getElementById('nc-name').value.trim();
+  if(!user||!pass||!name){alert('Username, password, and full name are required.');return;}
+  if(pass.length<6){alert('Password must be at least 6 characters.');return;}
+  api('manage_customer.php',{action:'add',username:user,password:pass,full_name:name,phone:document.getElementById('nc-phone').value,email:document.getElementById('nc-email').value},function(d){
+    if(d.status==='success'){
+      loadCustomers(function(){ closeModal(); renderMasterCustomers(); });
+    } else alert(d.message||'Error creating account');
+  });
+}
+
+function openEditCustomerModal(id){
+  var c=customers.find(function(x){return x.id==id;});
+  if(!c) return;
+  showModal('<h3>Edit Customer</h3>'+
+    '<p style="font-size:.8rem;color:var(--text-muted);margin-bottom:1rem;">Username: <strong style="color:var(--gold);">'+c.username+'</strong></p>'+
+    '<div class="form-group"><label>Full Name *</label><input type="text" id="ec-name" value="'+c.full_name+'"/></div>'+
+    '<div class="form-group"><label>Phone</label><input type="text" id="ec-phone" value="'+(c.phone||'')+'"/></div>'+
+    '<div class="form-group"><label>Email</label><input type="email" id="ec-email" value="'+(c.email||'')+'"/></div>'+
+    '<div class="form-group"><label>New Password (leave blank to keep current)</label><input type="password" id="ec-pass" placeholder="New password..."/></div>'+
+    '<div class="modal-actions"><button class="btn btn-primary" onclick="saveEditCustomer('+id+')">Save</button><button class="btn btn-outline" onclick="closeModal()">Cancel</button></div>');
+}
+function saveEditCustomer(id){
+  var name=document.getElementById('ec-name').value.trim();
+  if(!name){alert('Full name required.');return;}
+  api('manage_customer.php',{action:'edit',id:id,full_name:name,phone:document.getElementById('ec-phone').value,email:document.getElementById('ec-email').value,password:document.getElementById('ec-pass').value},function(d){
+    if(d.status==='success'){
+      loadCustomers(function(){ closeModal(); renderMasterCustomers(); });
+    } else alert(d.message||'Error');
+  });
+}
+function deleteCustomer(id,name){
+  if(!confirm('Delete account for '+name+'? This cannot be undone.')) return;
+  api('manage_customer.php',{action:'delete',id:id},function(d){
+    if(d.status==='success'){
+      loadCustomers(renderMasterCustomers);
+    } else alert(d.message||'Cannot delete this customer.');
+  });
+}
+
+// --- BOOKINGS MASTER ---
+function openAddBookingModal(){
+  showModal('<h3>Add Booking</h3>'+
+    '<div class="form-group"><label>Customer Name</label><input type="text" id="m-name"/></div>'+
+    '<div class="form-group"><label>Phone</label><input type="text" id="m-phone"/></div>'+
+    '<div class="form-group"><label>Service</label><select id="m-sv">'+services.map(function(s){return '<option value="'+s.id+'">'+s.name+'</option>';}).join('')+'</select></div>'+
+    '<div class="form-group"><label>Therapist</label><select id="m-th">'+therapists.filter(function(t){return t.status==='active';}).map(function(t){return '<option value="'+t.id+'">'+t.name+'</option>';}).join('')+'</select></div>'+
+    '<div class="form-group"><label>Date</label><input type="date" id="m-date"/></div>'+
+    '<div class="form-group"><label>Time</label><select id="m-time">'+['09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00'].map(function(t){return '<option>'+t+'</option>';}).join('')+'</select></div>'+
+    '<div class="modal-actions"><button class="btn btn-primary" onclick="saveAdminBooking()">Save</button><button class="btn btn-outline" onclick="closeModal()">Cancel</button></div>');
+}
+function saveAdminBooking(){
+  var name=document.getElementById('m-name').value.trim(), phone=document.getElementById('m-phone').value.trim();
+  if(!name||!phone){alert('Name and phone required.');return;}
+  // Admin bypass: directly set to confirmed
+  api('add_booking.php',{user_id:currentUser.id,customer:name,phone:phone,email:'',service:document.getElementById('m-sv').value,therapist:document.getElementById('m-th').value,date:document.getElementById('m-date').value,time:document.getElementById('m-time').value,notes:''},function(d){
+    if(d.status==='success'){
+      api('update_booking.php',{id:d.id,status:'confirmed'},function(){
+        loadBookings(function(){ closeModal(); renderMasterBookings(); });
+      });
+    } else alert(d.message||'Error: '+d.status);
+  });
+}
+function openEditBookingModal(id){
+  var b=bookings.find(function(x){return x.id===id;});
+  showModal('<h3>Edit Booking</h3>'+
+    '<div class="form-group"><label>Customer</label><input type="text" id="eb-name" value="'+b.customer+'"/></div>'+
+    '<div class="form-group"><label>Status</label><select id="eb-status">'+['awaiting_payment','pending','confirmed','inprogress','done','cancelled'].map(function(s){return '<option value="'+s+'"'+(b.status===s?' selected':'')+'>'+s+'</option>';}).join('')+'</select></div>'+
+    '<div class="form-group"><label>Date</label><input type="date" id="eb-date" value="'+b.date+'"/></div>'+
+    '<div class="form-group"><label>Time</label><select id="eb-time">'+['09:00','10:00','11:00','12:00','13:00','14:00','15:00','16:00','17:00'].map(function(t){return '<option'+(b.time&&b.time.startsWith(t)?' selected':'')+'>'+t+'</option>';}).join('')+'</select></div>'+
+    '<div class="modal-actions"><button class="btn btn-primary" onclick="saveEditBooking(\''+id+'\')">Save</button><button class="btn btn-outline" onclick="closeModal()">Cancel</button></div>');
+}
+function saveEditBooking(id){
+  api('update_booking.php',{id:id,status:document.getElementById('eb-status').value},function(d){
+    if(d.status==='success') loadBookings(function(){ closeModal(); renderMasterBookings(); });
+    else alert(d.message||'Error');
+  });
+}
+
+// =========== REPORTS ===========
+function renderReports(){
+  var total=bookings.length;
+  var done=bookings.filter(function(b){return b.status==='done';}).length;
+  var revenue=0; bookings.forEach(function(b){if(b.status==='done'){var sv=findById(services,b.service_id);if(sv)revenue+=parseInt(sv.price);}});
+  var pending=bookings.filter(function(b){return b.status==='pending';}).length;
+  document.getElementById('report-stats').innerHTML=
+    '<div class="stat-card"><div class="label">Total Bookings</div><div class="value">'+total+'</div></div>'+
+    '<div class="stat-card"><div class="label">Completed</div><div class="value">'+done+'</div></div>'+
+    '<div class="stat-card"><div class="label">Revenue</div><div class="value" style="font-size:1.2rem;">Rp '+fmt(revenue)+'</div></div>'+
+    '<div class="stat-card"><div class="label">Pending Verification</div><div class="value">'+pending+'</div></div>';
+
+  var revMap={};
+  bookings.filter(function(b){return b.status==='done';}).forEach(function(b){var sv=findById(services,b.service_id);if(sv)revMap[sv.name]=(revMap[sv.name]||0)+parseInt(sv.price);});
+  var revE=Object.entries(revMap).sort(function(a,b){return b[1]-a[1];});
+  var maxR=revE.length?revE[0][1]:1;
+  document.getElementById('revenue-chart').innerHTML=revE.map(function(e){
+    return '<div class="bar-row"><div class="bar-label">'+e[0].split(' ').slice(0,2).join(' ')+'</div>'+
+      '<div class="bar-track"><div class="bar-fill" style="width:'+Math.round(e[1]/maxR*100)+'%"></div></div>'+
+      '<div class="bar-val">'+Math.round(e[1]/1000)+'k</div></div>';
+  }).join('');
+
+  var statuses=['awaiting_payment','pending','confirmed','inprogress','done','cancelled'];
+  var sLabels=['Awaitng Pay','Pending','Confirmed','In Progress','Done','Cancelled'];
+  var cnts={}; statuses.forEach(function(s){cnts[s]=bookings.filter(function(b){return b.status===s;}).length;});
+  var maxC=Math.max.apply(null,Object.values(cnts).concat([1]));
+  document.getElementById('status-chart').innerHTML=statuses.map(function(s,i){
+    return '<div class="bar-row"><div class="bar-label">'+sLabels[i]+'</div>'+
+      '<div class="bar-track"><div class="bar-fill" style="width:'+Math.round(cnts[s]/maxC*100)+'%"></div></div>'+
+      '<div class="bar-val">'+cnts[s]+'</div></div>';
+  }).join('');
+}
+
+function exportCSV(type){
+  var rows,filename;
+  if(type==='bookings'){
+    rows=[['ID','Customer','Phone','Email','Service','Therapist','Date','Time','Status']];
+    bookings.forEach(function(b){var sv=findById(services,b.service_id);var th=findById(therapists,b.therapist_id);rows.push([b.id,b.customer,b.phone,b.email,sv?sv.name:'',th?th.name:'',b.date,b.time,b.status]);});
+    filename='serenity-bookings.csv';
+  } else if(type==='customers'){
+    rows=[['Username','Full Name','Phone','Email','Created']];
+    customers.forEach(function(c){rows.push([c.username,c.full_name,c.phone,c.email,c.created_at]);});
+    filename='serenity-customers.csv';
+  } else {
+    rows=[['Service','Category','Completed','Revenue (Rp)']];
+    services.forEach(function(s){var cnt=bookings.filter(function(b){return b.service_id===s.id&&b.status==='done';}).length;rows.push([s.name,categoryLabel(s.category),cnt,cnt*s.price]);});
+    filename='serenity-revenue.csv';
+  }
+  var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c||'').replace(/"/g,'""')+'"';}).join(',');}).join('\n');
+  var a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download=filename;a.click();
+}
+
+// =========== MODAL ===========
+function showModal(html){document.getElementById('modal-content').innerHTML=html;document.getElementById('modal-overlay').style.display='flex';}
+function closeModal(){document.getElementById('modal-overlay').style.display='none';}
+function closeModalOutside(e){if(e.target===document.getElementById('modal-overlay'))closeModal();}
+
+// Init
+window.onload=function(){ /* wait for login */ };
+</script>
+</p>
+</body>
+</html>
